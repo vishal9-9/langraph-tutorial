@@ -92,7 +92,7 @@ async def llm_call(state: AgentState) -> AgentState:
     if hasattr(llm_response, "tool_calls") and llm_response.tool_calls:
         print(f"\nUsing Tools : {[tc for tc in llm_response.tool_calls]}")
     else:
-        print(f"\nAI Responde : {llm_response.text()}")
+        print(f"\nAI Responde : {llm_response.text}")
 
     return {"messages": [user_message, llm_response]}
 
