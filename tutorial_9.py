@@ -3,7 +3,6 @@ from typing import Annotated, Sequence, TypedDict
 
 from dotenv import load_dotenv
 from langchain_core.messages import (
-    AIMessage,
     BaseMessage,
     HumanMessage,
     SystemMessage,
