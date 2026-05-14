@@ -90,10 +90,10 @@ async def llm_call(state: AgentState) -> AgentState:
 
     llm_response = await llm.ainvoke(all_messages)
 
-    print(f"\nAI Responde : {llm_response.content}")
-
     if hasattr(llm_response, "tool_calls") and llm_response.tool_calls:
         print(f"\nUsing Tools : {[tc for tc in llm_response.tool_calls]}")
+    else:
+        print(f"\nAI Responde : {llm_response.text()}")
 
     return {"messages": [user_message, llm_response]}
 
@@ -105,22 +105,14 @@ def should_continue(state: AgentState) -> str:
         return "continue"
 
     for message in reversed(state["messages"]):
-        print("message\n : ", message)
         if (
             isinstance(message, ToolMessage)
-            and "save" in message.content.lower()
-            and "document" in message.content.lower()
+            and "saved" in message.content.lower()
+            and "file" in message.content.lower()
         ):
             return "end"
 
     return "continue"
-
-
-def should_use_tool(state: AgentState) -> str:
-    last = state["messages"][-1]
-    if isinstance(last, AIMessage) and last.tool_calls:
-        return "tool"
-    return "llm_node"  # ← loop back for user input instead of ending
 
 
 def print_messages(messages):
@@ -138,10 +130,7 @@ graph.add_node("llm_node", llm_call)
 graph.add_node("tool", ToolNode(tools))
 
 graph.add_edge(START, "llm_node")
-
-graph.add_conditional_edges(
-    "llm_node", should_use_tool, {"tool": "tool", "llm_node": "llm_node"}
-)
+graph.add_edge("llm_node", "tool")
 
 graph.add_conditional_edges(
     "tool", should_continue, {"continue": "llm_node", "end": END}
@@ -160,6 +149,8 @@ async def run_agent():
     async for step in app.astream(state, stream_mode="values"):
         if "messages" in step:
             print_messages(step["messages"])
+
+    print("\n ===== DRAFTER FINISHED =====")
 
 
 if __name__ == "__main__":
